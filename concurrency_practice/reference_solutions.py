@@ -59,3 +59,66 @@ class ReusableBarrierReference:
 
         self._turnstile2.acquire()
         self._turnstile2.release()
+
+
+class ProducerConsumerReference:
+    """Known-good finite-buffer producer-consumer implementation."""
+
+    def __init__(self, capacity: int) -> None:
+        if capacity <= 0:
+            raise ValueError("capacity must be positive")
+        self.capacity = capacity
+        self._mutex = threading.Semaphore(1)
+        self._items = threading.Semaphore(0)
+        self._spaces = threading.Semaphore(capacity)
+
+    def produce(self, item: int, put: Callable[[int], None]) -> None:
+        self._spaces.acquire()
+        self._mutex.acquire()
+        try:
+            put(item)
+        finally:
+            self._mutex.release()
+        self._items.release()
+
+    def consume(self, get: Callable[[], int]) -> int:
+        self._items.acquire()
+        self._mutex.acquire()
+        try:
+            item = get()
+        finally:
+            self._mutex.release()
+        self._spaces.release()
+        return item
+
+
+class ReadersWritersReference:
+    """Known-good basic readers-writers implementation."""
+
+    def __init__(self) -> None:
+        self._readers = 0
+        self._mutex = threading.Semaphore(1)
+        self._room_empty = threading.Semaphore(1)
+
+    def reader(self, read: Callable[[], None]) -> None:
+        self._mutex.acquire()
+        self._readers += 1
+        if self._readers == 1:
+            self._room_empty.acquire()
+        self._mutex.release()
+
+        try:
+            read()
+        finally:
+            self._mutex.acquire()
+            self._readers -= 1
+            if self._readers == 0:
+                self._room_empty.release()
+            self._mutex.release()
+
+    def writer(self, write: Callable[[], None]) -> None:
+        self._room_empty.acquire()
+        try:
+            write()
+        finally:
+            self._room_empty.release()
