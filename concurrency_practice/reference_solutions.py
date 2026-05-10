@@ -122,3 +122,80 @@ class ReadersWritersReference:
             write()
         finally:
             self._room_empty.release()
+
+
+class _LightSwitch:
+    def __init__(self) -> None:
+        self._counter = 0
+        self._mutex = threading.Semaphore(1)
+
+    def lock(self, semaphore: threading.Semaphore) -> None:
+        self._mutex.acquire()
+        self._counter += 1
+        if self._counter == 1:
+            semaphore.acquire()
+        self._mutex.release()
+
+    def unlock(self, semaphore: threading.Semaphore) -> None:
+        self._mutex.acquire()
+        self._counter -= 1
+        if self._counter == 0:
+            semaphore.release()
+        self._mutex.release()
+
+
+class NoStarveReadersWritersReference:
+    """Known-good no-starve readers-writers implementation."""
+
+    def __init__(self) -> None:
+        self._read_switch = _LightSwitch()
+        self._room_empty = threading.Semaphore(1)
+        self._turnstile = threading.Semaphore(1)
+
+    def reader(self, read: Callable[[], None]) -> None:
+        self._turnstile.acquire()
+        self._turnstile.release()
+
+        self._read_switch.lock(self._room_empty)
+        try:
+            read()
+        finally:
+            self._read_switch.unlock(self._room_empty)
+
+    def writer(self, write: Callable[[], None]) -> None:
+        self._turnstile.acquire()
+        self._room_empty.acquire()
+        try:
+            write()
+        finally:
+            self._turnstile.release()
+            self._room_empty.release()
+
+
+class WriterPriorityReadersWritersReference:
+    """Known-good writer-priority readers-writers implementation."""
+
+    def __init__(self) -> None:
+        self._read_switch = _LightSwitch()
+        self._write_switch = _LightSwitch()
+        self._no_readers = threading.Semaphore(1)
+        self._no_writers = threading.Semaphore(1)
+
+    def reader(self, read: Callable[[], None]) -> None:
+        self._no_readers.acquire()
+        self._read_switch.lock(self._no_writers)
+        self._no_readers.release()
+
+        try:
+            read()
+        finally:
+            self._read_switch.unlock(self._no_writers)
+
+    def writer(self, write: Callable[[], None]) -> None:
+        self._write_switch.lock(self._no_readers)
+        self._no_writers.acquire()
+        try:
+            write()
+        finally:
+            self._no_writers.release()
+            self._write_switch.unlock(self._no_readers)

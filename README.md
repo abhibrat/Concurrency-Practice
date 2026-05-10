@@ -9,6 +9,8 @@ You edit the solution files:
 - `concurrency_practice/solutions/reusable_barrier.py`
 - `concurrency_practice/solutions/producer_consumer.py`
 - `concurrency_practice/solutions/readers_writers.py`
+- `concurrency_practice/solutions/no_starve_readers_writers.py`
+- `concurrency_practice/solutions/writer_priority_readers_writers.py`
 
 Then run pytest:
 
@@ -110,6 +112,39 @@ The verifier checks:
 Writer-priority and no-starve variants are separate extensions and are not
 required by this verifier.
 
+## No-Starve Readers-Writers
+
+Implement `NoStarveReadersWriters.reader()` and
+`NoStarveReadersWriters.writer()`.
+
+This is the Little Book sections 4.2.4 and 4.2.5 variant. It starts with the
+basic readers-writers safety rules and adds:
+
+- If a writer arrives while readers are active, later readers must queue behind
+  that writer.
+- When the current readers leave, at least one waiting writer must enter before
+  those later readers.
+
+The book's hint is to add a `turnstile`. Writers hold the turnstile while
+waiting for the room to become empty, which prevents later readers from
+continually extending the reader group.
+
+## Writer-Priority Readers-Writers
+
+Implement `WriterPriorityReadersWriters.reader()` and
+`WriterPriorityReadersWriters.writer()`.
+
+This is the Little Book sections 4.2.6 and 4.2.7 variant. It starts with the
+basic readers-writers safety rules and adds:
+
+- Once a writer is queued, later readers must wait.
+- If several writers are queued, readers should not enter until the queued
+  writer group has drained.
+
+The book's solution uses reader and writer lightswitches plus `noReaders` and
+`noWriters` semaphores. The tradeoff is that readers can starve or face long
+delays while writers keep arriving.
+
 ## Useful Commands
 
 Run just one problem:
@@ -119,6 +154,8 @@ python -m pytest tests/test_rendezvous.py -q
 python -m pytest tests/test_reusable_barrier.py -q
 python -m pytest tests/test_producer_consumer.py -q
 python -m pytest tests/test_readers_writers.py -q
+python -m pytest tests/test_no_starve_readers_writers.py -q
+python -m pytest tests/test_writer_priority_readers_writers.py -q
 ```
 
 Increase stress:
@@ -129,6 +166,8 @@ RENDEZVOUS_CONCURRENT_PAIRS=64 CONCURRENCY_STRESS_RUNS=200 python -m pytest test
 BARRIER_STRESS_RUNS=100 BARRIER_GENERATIONS=50 python -m pytest tests/test_reusable_barrier.py -q
 PRODUCER_CONSUMER_STRESS_RUNS=200 PRODUCER_CONSUMER_CAPACITY=3 python -m pytest tests/test_producer_consumer.py -q
 READERS_WRITERS_STRESS_RUNS=200 python -m pytest tests/test_readers_writers.py -q
+NO_STARVE_READERS_WRITERS_STRESS_RUNS=100 python -m pytest tests/test_no_starve_readers_writers.py -q
+WRITER_PRIORITY_READERS_WRITERS_STRESS_RUNS=100 WRITER_PRIORITY_QUEUED_WRITERS=5 python -m pytest tests/test_writer_priority_readers_writers.py -q
 ```
 
 Verify the harness itself against known-good reference implementations:

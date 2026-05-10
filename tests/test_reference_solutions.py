@@ -1,14 +1,18 @@
 from concurrency_practice.reference_solutions import (
+    NoStarveReadersWritersReference,
     ProducerConsumerReference,
     ReadersWritersReference,
     RendezvousReference,
     ReusableBarrierReference,
+    WriterPriorityReadersWritersReference,
 )
 from concurrency_practice.verifiers import (
+    verify_no_starve_readers_writers,
     verify_producer_consumer,
     verify_readers_writers,
     verify_rendezvous,
     verify_reusable_barrier,
+    verify_writer_priority_readers_writers,
 )
 
 
@@ -40,4 +44,19 @@ def test_reference_readers_writers() -> None:
         writer_threads=3,
         operations_per_thread=4,
         runs=10,
+    )
+
+
+def test_reference_no_starve_readers_writers() -> None:
+    verify_no_starve_readers_writers(
+        NoStarveReadersWritersReference,
+        runs=10,
+    )
+
+
+def test_reference_writer_priority_readers_writers() -> None:
+    verify_writer_priority_readers_writers(
+        WriterPriorityReadersWritersReference,
+        runs=10,
+        queued_writers=3,
     )

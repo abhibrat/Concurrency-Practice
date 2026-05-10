@@ -6,6 +6,11 @@ from concurrency_practice.verifiers.readers_writers import (
     ReadersWritersVerifier,
     verify_readers_writers,
 )
+from concurrency_practice.verifiers.readers_writers_variants import (
+    ReadersWritersVariantProbe,
+    verify_no_starve_readers_writers,
+    verify_writer_priority_readers_writers,
+)
 from concurrency_practice.verifiers.reusable_barrier import (
     ReusableBarrierVerifier,
     verify_reusable_barrier,
@@ -22,8 +27,11 @@ __all__ = [
     "ReusableBarrierVerifier",
     "ProducerConsumerVerifier",
     "ReadersWritersVerifier",
+    "ReadersWritersVariantProbe",
     "verify_rendezvous",
     "verify_reusable_barrier",
     "verify_producer_consumer",
     "verify_readers_writers",
+    "verify_no_starve_readers_writers",
+    "verify_writer_priority_readers_writers",
 ]
