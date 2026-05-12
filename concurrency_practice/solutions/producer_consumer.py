@@ -23,7 +23,6 @@ Stress:
 """
 
 from collections.abc import Callable
-from threading import Semaphore
 
 
 class ProducerConsumer:
@@ -33,25 +32,14 @@ class ProducerConsumer:
         if capacity <= 0:
             raise ValueError("capacity must be positive")
         self.capacity = capacity
-        self._mutex = Semaphore(1)
-        self._items = Semaphore(0)
-        self._spaces = Semaphore(capacity)
+        # Put semaphores, locks, counters, or conditions here.
 
     def produce(self, item: int, put: Callable[[int], None]) -> None:
-        self._spaces.acquire()
-        self._mutex.acquire()
-        try:
-            put(item)
-        finally:
-            self._mutex.release()
-        self._items.release()
+        # TODO: wait for space, enter exclusively, call put exactly once,
+        # then signal that an item is available.
+        put(item)
 
     def consume(self, get: Callable[[], int]) -> int:
-        self._items.acquire()
-        self._mutex.acquire()
-        try:
-            item = get()
-        finally:
-            self._mutex.release()
-        self._spaces.release()
-        return item
+        # TODO: wait for an item, enter exclusively, call get exactly once,
+        # then signal that space is available.
+        return get()
