@@ -27,19 +27,47 @@ Stress:
 """
 
 from collections.abc import Callable
-
+from threading import Lock
 
 class WriterPriorityReadersWriters:
     """Starter solution for the writer-priority readers-writers exercise."""
 
     def __init__(self) -> None:
-        # Put semaphores, locks, counters, lightswitches, or gates here.
+        self.lock1=Lock()
+        self.lock2=Lock()
+        self.room=Lock()
+        self.readers=0
+        self.writers_queued=0
         pass
 
     def reader(self, read: Callable[[], None]) -> None:
-        # TODO: enter as a writer-priority reader, call read once, then leave.
-        read()
+        self.lock2.acquire()
+        self.lock2.release()
+        
+        with self.lock1:
+            self.readers+=1
+            if self.readers==1:
+                self.room.acquire()
+
+        try:
+            read()
+        finally:
+            with self.lock1:
+                self.readers-=1
+                if self.readers==0:
+                    self.room.release()
+
 
     def writer(self, write: Callable[[], None]) -> None:
-        # TODO: enter as a writer-priority writer, call write once, then leave.
-        write()
+        with self.lock1:
+            self.writers_queued+=1
+            if self.writers_queued==1:
+                self.lock2.acquire()
+        self.room.acquire()
+        try:        
+            write()
+        finally:
+            self.room.release()
+            self.writers_queued-=1
+            if self.writers_queued==0:
+                self.lock2.release()    

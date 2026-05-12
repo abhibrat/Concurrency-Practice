@@ -27,19 +27,40 @@ Stress:
 """
 
 from collections.abc import Callable
-
+import threading
 
 class NoStarveReadersWriters:
     """Starter solution for the no-starve readers-writers exercise."""
 
     def __init__(self) -> None:
-        # Put semaphores, locks, counters, lightswitches, or turnstiles here.
+        self.lock=threading.Lock()
+        self.lock2=threading.Lock()
+        self.room_empty=threading.Lock()
+        self.readers=0
         pass
 
     def reader(self, read: Callable[[], None]) -> None:
-        # TODO: enter as a no-starve reader, call read exactly once, then leave.
-        read()
+        with self.lock:
+            pass
+
+        with self.lock2:
+            self.readers+=1
+            if self.readers==1:
+                self.room_empty.acquire()
+
+        try:
+            read()
+        finally:
+            with self.lock2:
+                self.readers-=1
+                if self.readers==0:
+                    self.room_empty.release()
+
 
     def writer(self, write: Callable[[], None]) -> None:
-        # TODO: enter as a no-starve writer, call write exactly once, then leave.
-        write()
+        with self.lock:
+            self.room_empty.acquire()
+            try:
+                write()
+            finally:
+                self.room_empty.release()

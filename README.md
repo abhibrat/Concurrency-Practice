@@ -12,7 +12,13 @@ You edit the solution files:
 - `concurrency_practice/solutions/no_starve_readers_writers.py`
 - `concurrency_practice/solutions/writer_priority_readers_writers.py`
 
-Then run pytest:
+Install the test dependency into your active Python once:
+
+```bash
+python -m pip install -e '.[dev]'
+```
+
+Then run pytest. Poetry is not required for this repo:
 
 ```bash
 python -m pytest -q
