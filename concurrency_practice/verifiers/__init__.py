@@ -1,3 +1,7 @@
+from concurrency_practice.verifiers.bounded_blocking_queue import (
+    BoundedBlockingQueueVerifier,
+    verify_bounded_blocking_queue,
+)
 from concurrency_practice.verifiers.producer_consumer import (
     ProducerConsumerVerifier,
     verify_producer_consumer,
@@ -25,11 +29,13 @@ __all__ = [
     "RendezvousVerifier",
     "MultiRendezvousVerifier",
     "ReusableBarrierVerifier",
+    "BoundedBlockingQueueVerifier",
     "ProducerConsumerVerifier",
     "ReadersWritersVerifier",
     "ReadersWritersVariantProbe",
     "verify_rendezvous",
     "verify_reusable_barrier",
+    "verify_bounded_blocking_queue",
     "verify_producer_consumer",
     "verify_readers_writers",
     "verify_no_starve_readers_writers",

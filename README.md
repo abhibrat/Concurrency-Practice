@@ -7,6 +7,7 @@ You edit the solution files:
 
 - `concurrency_practice/solutions/rendezvous.py`
 - `concurrency_practice/solutions/reusable_barrier.py`
+- `concurrency_practice/solutions/bounded_blocking_queue.py`
 - `concurrency_practice/solutions/producer_consumer.py`
 - `concurrency_practice/solutions/readers_writers.py`
 - `concurrency_practice/solutions/no_starve_readers_writers.py`
@@ -91,6 +92,31 @@ The verifier checks:
 - Every consumed item was produced.
 - No item is consumed more than once.
 
+## Bounded Blocking Queue
+
+Implement `BoundedBlockingQueue.enqueue()`,
+`BoundedBlockingQueue.dequeue()`, and `BoundedBlockingQueue.size()`.
+
+This is the Little Book finite-buffer producer-consumer variation from
+sections 4.1.4 through 4.1.6, packaged like a queue object. It also uses the
+section 3.8 idea that semaphores can act as queues of waiting threads.
+
+```python
+queue = BoundedBlockingQueue(capacity=3)
+queue.enqueue(10)
+item = queue.dequeue()
+current = queue.size()
+```
+
+The verifier checks:
+
+- Items come out in FIFO order.
+- `dequeue()` blocks while the queue is empty.
+- `enqueue(item)` blocks while the queue is full.
+- Many producers and consumers can use the queue concurrently.
+- Every enqueued item is dequeued exactly once.
+- `size()` reports the current number of queued items and ends at zero.
+
 ## Readers-Writers
 
 Implement `ReadersWriters.reader()` and `ReadersWriters.writer()` for the
@@ -158,6 +184,7 @@ Run just one problem:
 ```bash
 python -m pytest tests/test_rendezvous.py -q
 python -m pytest tests/test_reusable_barrier.py -q
+python -m pytest tests/test_bounded_blocking_queue.py -q
 python -m pytest tests/test_producer_consumer.py -q
 python -m pytest tests/test_readers_writers.py -q
 python -m pytest tests/test_no_starve_readers_writers.py -q
@@ -170,6 +197,7 @@ Increase stress:
 CONCURRENCY_STRESS_RUNS=500 python -m pytest tests/test_rendezvous.py -q
 RENDEZVOUS_CONCURRENT_PAIRS=64 CONCURRENCY_STRESS_RUNS=200 python -m pytest tests/test_rendezvous.py -q
 BARRIER_STRESS_RUNS=100 BARRIER_GENERATIONS=50 python -m pytest tests/test_reusable_barrier.py -q
+BOUNDED_BLOCKING_QUEUE_STRESS_RUNS=200 BOUNDED_BLOCKING_QUEUE_CAPACITY=3 python -m pytest tests/test_bounded_blocking_queue.py -q
 PRODUCER_CONSUMER_STRESS_RUNS=200 PRODUCER_CONSUMER_CAPACITY=3 python -m pytest tests/test_producer_consumer.py -q
 READERS_WRITERS_STRESS_RUNS=200 python -m pytest tests/test_readers_writers.py -q
 NO_STARVE_READERS_WRITERS_STRESS_RUNS=100 python -m pytest tests/test_no_starve_readers_writers.py -q

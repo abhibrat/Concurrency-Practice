@@ -2,6 +2,45 @@ from collections.abc import Callable
 import threading
 
 
+class BoundedBlockingQueueReference:
+    """Known-good bounded FIFO blocking queue implementation."""
+
+    def __init__(self, capacity: int) -> None:
+        if capacity <= 0:
+            raise ValueError("capacity must be positive")
+        self.capacity = capacity
+        self._queue: list[int] = []
+        self._mutex = threading.Semaphore(1)
+        self._items = threading.Semaphore(0)
+        self._spaces = threading.Semaphore(capacity)
+
+    def enqueue(self, item: int) -> None:
+        self._spaces.acquire()
+        self._mutex.acquire()
+        try:
+            self._queue.append(item)
+        finally:
+            self._mutex.release()
+        self._items.release()
+
+    def dequeue(self) -> int:
+        self._items.acquire()
+        self._mutex.acquire()
+        try:
+            item = self._queue.pop(0)
+        finally:
+            self._mutex.release()
+        self._spaces.release()
+        return item
+
+    def size(self) -> int:
+        self._mutex.acquire()
+        try:
+            return len(self._queue)
+        finally:
+            self._mutex.release()
+
+
 class RendezvousReference:
     """Known-good rendezvous implementation using two semaphores."""
 
